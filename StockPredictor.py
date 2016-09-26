@@ -176,18 +176,22 @@ class StockPredictor:
         colmn = self.data[self.metric]
         colmn = colmn.values
         print "last 3 cols", colmn[-1]
-        self.maxlen = 1
-        self.step = 1
+        self.maxlen = 5
+
+        #self.step = 1
+        self.step = self.numBdaysAhead
+
         self.batch_size = 25
         X = []
         y = []
-        for i in range(0, len(colmn) - self.maxlen, self.step):
+        for i in range(0, len(colmn) - self.step-self.maxlen):
             X.append(colmn[i: i + self.maxlen])
-            y.append(colmn[i + self.maxlen])
+            y.append(colmn[i + self.step+self.maxlen])
         print('nb sequences:', len(X))
 
         X = np.array(X)
         y = np.array(y)
+        print "X and y", X, y
 
         X = np.reshape(X, X.shape + (1,))
         y = np.reshape(y, y.shape + (1,))
@@ -201,10 +205,10 @@ class StockPredictor:
 
         model = Sequential()
         model.add(LSTM(50,
-                       batch_input_shape=(self.batch_size, self.step, 1),
+                       batch_input_shape=(self.batch_size, self.maxlen, 1),
                        return_sequences=True))
         model.add(LSTM(50,
-                       batch_input_shape=(self.batch_size, self.step, 1),
+                       batch_input_shape=(self.batch_size, self.maxlen, 1),
                        return_sequences=False))
         model.add(Dense(1))
 
@@ -212,7 +216,7 @@ class StockPredictor:
         # Compile model
         model.compile(loss='mean_squared_error', optimizer='rmsprop')
 
-        model.fit(X_train, y_train, nb_epoch=25, batch_size=self.batch_size, verbose=2)
+        model.fit(X_train, y_train, nb_epoch=50, batch_size=self.batch_size, verbose=2)
 
         predicttest = model.predict(X_test)
         predicttrain = model.predict(X_train)
@@ -225,6 +229,7 @@ class StockPredictor:
         cols = self.data[self.metric].tail(self.batch_size)
         cols = cols.values
 
+        '''
         predicted = 0
         for i in xrange(0, self.numBdaysAhead):
             X = []
@@ -241,6 +246,17 @@ class StockPredictor:
             cols = np.append(cols, predicted)
             #print "COLS", cols
         print "COLS", cols
+        '''
+        X = []
+        for i in range(0, len(cols)-self.maxlen, self.step):
+            X.append(cols[i: i + self.maxlen])
+
+        inputSeq = np.array(X)
+        print "test", inputSeq
+        inputSeq = np.reshape(inputSeq, inputSeq.shape + (1,))
+        # print "inputseq", inputSeq
+        predicted = self.model.predict(inputSeq)[0][0]
+        print "Predicted", predicted
         return predicted
 
 
