@@ -9,6 +9,7 @@ import quandl
 from sklearn.cross_validation import train_test_split, ShuffleSplit
 from sklearn.decomposition import PCA
 from sklearn.grid_search import GridSearchCV
+from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
 from sklearn.preprocessing import MinMaxScaler
 import renders as rs
@@ -55,7 +56,7 @@ class StockPredictor:
         #predictAhead = abs((predictDate - endDate).days)
 
         self.numBdaysAhead = abs(np.busday_count(predictDate, endDate))
-        print "bdays ahread", self.numBdaysAhead
+        print "business days ahead", self.numBdaysAhead
 
         self.sequenceLength = sequenceLength
         self.predictAhead = self.numBdaysAhead
@@ -99,6 +100,27 @@ class StockPredictor:
         # print "SCALED DATA", scaled_data.tail(1)
         self.scaled_data = scaled_data
         self.label = label
+
+    def trainLinearRegression(self):
+        lr = LinearRegression()
+        X_train, X_test, y_train, y_test = train_test_split(self.scaled_data, self.label, test_size=0.25,
+                                                            random_state=42)
+        lr.fit(X_train, y_train)
+        predicttrain = lr.predict(X_train)
+        predicttest = lr.predict(X_test)
+        print "R2 score for training set (SVR): {:.4f}.".format(r2_score(predicttrain, y_train))
+        print "R2 score for test set (SVR): {:.4f}.".format(r2_score(predicttest, y_test))
+        self.model = lr
+
+    def predictLinearRegression(self):
+        inputSeq = self.scaler.transform(self.final_row_unscaled)
+        print "inputseq", inputSeq
+
+        inputSeq = pd.DataFrame(inputSeq)
+
+        predicted = self.model.predict(inputSeq)[0]
+        print "Predicted", predicted
+        return predicted
 
 
     def trainSVR(self):
@@ -179,7 +201,7 @@ class StockPredictor:
         self.maxlen = 5
 
         #self.step = 1
-        self.step = self.numBdaysAhead
+        self.step = self.numBdaysAhead-1
 
         self.batch_size = 25
         X = []
@@ -251,7 +273,7 @@ class StockPredictor:
         for i in range(0, len(cols)-self.maxlen, self.step):
             X.append(cols[i: i + self.maxlen])
 
-        inputSeq = np.array(X)
+        inputSeq = np.array([X[-1]])
         print "test", inputSeq
         inputSeq = np.reshape(inputSeq, inputSeq.shape + (1,))
         # print "inputseq", inputSeq

@@ -7,8 +7,8 @@ import StockPredictor
 
 startDate = '2005-01-04'
 #endDate = dt.datetime.today().strftime("%Y-%m-%d")
-endDate = '2016-06-14'
-queryDate = '2016-06-30'
+endDate = '2016-07-14'
+queryDate = '2016-07-28'
 # options of: Open   High    Low  Close      Volume  Adjusted Close
 metric = 'Adjusted Close'
 
@@ -19,7 +19,7 @@ tickerSymbol = 'YAHOO/AX_BHP'
 quandl.ApiConfig.api_key = '9gcG2sy8nDdewoUHUVrq'
 
 #backtest - query the data, and then query the API to see how close it was to the correct value
-reloadData = False
+reloadData = True
 
 fileName = "backTest.csv"
 if reloadData:
@@ -42,16 +42,23 @@ sp = StockPredictor.StockPredictor('abc')
 sp.loadData(tickerSymbol, startDate, endDate, reloadData=reloadData, fileName='qandlData.csv')
 sp.prepareData(queryDate, metric=metric, sequenceLength=5)
 
-#sp.trainSVR()
-#predicted = sp.predictSVR()
-#print "Actual:", actual, "Predicted by SVR", predicted
-#print "Percent Difference:{:.4f} %".format(abs((actual-predicted)/actual)*100.0)
+sp.trainLinearRegression()
+predicted = sp.predictLinearRegression()
+print "Actual:", actual, "Predicted by SVR", predicted
+print "Percent Difference:{:.4f} %".format(abs((actual-predicted)/actual)*100.0)
 
-#sp.trainNN()
-#predicted = sp.predictNN()
+sp.trainSVR()
+predicted = sp.predictSVR()
+print "Actual:", actual, "Predicted by SVR", predicted
+print "Percent Difference:{:.4f} %".format(abs((actual-predicted)/actual)*100.0)
+
+sp.trainNN()
+predicted = sp.predictNN()
+print "Actual:", actual, "Predicted by SVR", predicted
+print "Percent Difference:{:.4f} %".format(abs((actual-predicted)/actual)*100.0)
+
 
 sp.trainRNN()
 predicted = sp.predictRNN()
-
-print "Actual:", actual, "Predicted by NN", predicted
+print "Actual:", actual, "Predicted by RNN", predicted
 print "Percent Difference:{:.4f} %".format(abs((actual-predicted)/actual)*100.0)
