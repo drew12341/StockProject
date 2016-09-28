@@ -198,7 +198,7 @@ class StockPredictor:
         colmn = self.data[self.metric]
         colmn = colmn.values
         print "last 3 cols", colmn[-1]
-        self.maxlen = 5
+        self.maxlen = 7
 
         #self.step = 1
         self.step = self.numBdaysAhead-1
@@ -248,7 +248,7 @@ class StockPredictor:
         self.model = model
 
     def predictRNN(self):
-        cols = self.data[self.metric].tail(self.batch_size)
+        cols = self.data[self.metric].tail(self.batch_size*self.maxlen)
         cols = cols.values
 
         '''
@@ -270,7 +270,7 @@ class StockPredictor:
         print "COLS", cols
         '''
         X = []
-        for i in range(0, len(cols)-self.maxlen, self.step):
+        for i in range(0, len(cols)-self.maxlen+1):
             X.append(cols[i: i + self.maxlen])
 
         inputSeq = np.array([X[-1]])
