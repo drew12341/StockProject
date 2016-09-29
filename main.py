@@ -60,14 +60,15 @@ res = data.describe().transpose()
 
 res['variance'] = data.var()
 res['outliers'] = outliers.sum()
+res['var_x_outliers'] = res['variance']*(1/res['outliers'])
 
-print res
+print res.sort_values(by=['var_x_outliers'],ascending=[False]).transpose().keys()[0]
 
-print "SELECTED STOCK", res.sort_values(by=['variance','outliers'], ascending=[False, True]).transpose().keys()[0]
-
+#print "SELECTED STOCK", res.sort_values(by=['variance','outliers'], ascending=[False, True]).transpose().keys()[0]
+print "SELECTED STOCK", res.sort_values(by=['var_x_outliers'],ascending=[False]).transpose().keys()[0]
 #now we have the selected stock, play ball.
 
-tickerSymbol = res.sort_values(by=['variance','outliers'], ascending=[False, True]).transpose().keys()[0]
+tickerSymbol = res.sort_values(by=['var_x_outliers'], ascending=[False]).transpose().keys()[0]
 
 
 #backtest - query the data, and then query the API to see how close it was to the correct value
